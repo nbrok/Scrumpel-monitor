@@ -4,9 +4,9 @@
 ;	Scrumpel 8a and 8b monitor
 ;	device addresses.
 
-sbuf			equ	$8301		;ACIA Data register
-scsr			equ	$8300		;ACIA Status register
-leds			equ	$8400		;LEDS
+sbuf			equ	$cf01		;ACIA Data register
+scsr			equ	$cf00		;ACIA Status register
+leds			equ	$cf20		;LEDS
 aciainit		equ	%00010101	;8N1 @ 115200
 
 ;	pointers and storage.
@@ -60,7 +60,7 @@ ramswi			equ	$0a1
 resetflag		equ	$06e
 
 
-stackbase		equ	$7fff
+stackbase		equ	$bfff
 
 	org	0
 	phase	$c000
@@ -688,7 +688,7 @@ min	jsr	ot			;Echo the character
 altl0a	bra	altl0
 txtin	jsr	ot			;Echo command
 	stx	buffer			;Save beginaddress into buffer
-txtinl	jsr	inul			;Get character in upper of lower case
+txtinl	jsr	inul			;Get character in upper or lower case
 	cmpa	#$8			;A backspace pressed?
 	bne	txtver			;Get next character
 	cmpx	buffer			;At begin of text?
@@ -699,10 +699,12 @@ txtinl	jsr	inul			;Get character in upper of lower case
 	puls	x			;Restore X
 	leax	-1,x			;Decrement X one character
 	bra	txtinl			;Get next character
-txtver	jsr	ot			;Echo character
+txtver	cmpa	#' '			;Below space?
+	bcs	txtinl			;Yes? Do nothing with it
+	jsr	ot			;Echo character
 	cmpa	#"'"			;A ' means end of text
 	beq	altl0a
-	sta	0,x+			;Increment to next address
+	sta	0,x+			;Store char and increment to next address
 	bra	txtinl			;Get next character
 
 relative
@@ -723,7 +725,7 @@ relative
 	beq	back
 offerr	ldx	#offseterr		;Point X to offseterror text
 	jsr	ott
-	ldx	buffer			;Restpre X from buffer
+	ldx	buffer			;Restore X from buffer
 	leax	-1,x			;Decrement it
 	jmp	altl0			;Try again
 
