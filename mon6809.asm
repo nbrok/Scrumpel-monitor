@@ -303,13 +303,13 @@ initr	clr	resetflag		;Clear resetflag form BASIC
 	sta	ramswi
 	ldx	#software_interrupt
 	stx	ramswi+1
-	ldx	#movscr			;Helpinstructions for block.
-	lda	#$a6
-	sta	0,x
-	lda	#$a7
-	sta	2,x
-	lda	#$39
-	sta	4,x
+;	ldx	#movscr			;Helpinstructions for block.
+;	lda	#$a6
+;	sta	0,x
+;	lda	#$a7
+;	sta	2,x
+;	lda	#$39
+;	sta	4,x
 	bsr	clear_reg		;Clear the registers
 	rts
 
@@ -634,16 +634,16 @@ mesdi	jsr	ott
 	puls	b
 	rts
 
-asciiot	anda	#$7f
-	cmpa	#$7e
-	bcc	otpunt
-	cmpa	#' '
-	bcc	otkar
-otpunt	lda	#'.'
+asciiot	anda	#$7f			;Reset bit 8 from character.
+	cmpa	#$7e			;Unprintable character?
+	bcc	otpunt			;Print a '.'.
+	cmpa	#' '			;Unprintable character?
+	bcc	otkar			;No, print the character.
+otpunt	lda	#'.'			;Print a '.'.
 otkar	jmp	ot
 
 alterg	jsr	ot			;Entry for G command.
-	lda	#space			;Print a space
+	lda	#space			;Print a space.
 	jsr	ot
 
 alter	jsr	adresin			;Get address.
@@ -750,7 +750,7 @@ offseterr
 
 bstxt	fcb	bs,space,bs,0
 
-hdump	jsr	adresin
+hdump	jsr	adresin			;Get beginaddress to dump.
 hloop	jsr	crlf
 	pshs	x
 	jsr	xot
@@ -773,9 +773,9 @@ hloop2	lda	0,x+
 	jsr	asciiot
 	decb
 	bne	hloop2
-	lda	consolebreak
+	lda	consolebreak		;Check for break.
 	bne	hloop
-	lda	#$ff
+	lda	#$ff			;Stop dumping.
 	sta	consolebreak
 	rts
 
@@ -796,8 +796,7 @@ presl1	sta	0,x+
 	rts
 
 delete	jsr	bytin
-	sta	movscr+1
-	clr	movscr+3
+	sta	movscr
 	lda	#space
 	jsr	ot
 	jsr	adresin
@@ -808,15 +807,18 @@ delete	jsr	bytin
 	leax	1,x
 	stx	tobuf
 	ldx	buffer
-dloop	jsr	movscr
-	leax	1,x
+dloop	pshs	x
+	ldb	movscr
+	abx
+	lda	0,x
+	puls	x
+	sta	0,x+
 	cmpx	tobuf
 	bne	dloop
 	rts
 
 insert	jsr	bytin
-	sta	movscr+3
-	clr	movscr+1
+	sta	movscr
 	lda	#space
 	jsr	ot
 	jsr	adresin
@@ -825,7 +827,12 @@ insert	jsr	bytin
 	lda	#space
 	jsr	ot
 	jsr	adresin
-iloop	jsr	movscr
+iloop	lda	0,x
+	pshs	x
+	ldb	movscr
+	abx
+	sta	0,x
+	puls	x
 	leax	-1,x
 	cmpx	tobuf
 	bne	iloop
@@ -836,7 +843,7 @@ copy	jsr	adresin
 	lda	#space
 	jsr	ot
 	jsr	adresin
-	lda	,x+
+	leax	1,x
 	stx	tobuf
 	lda	#space
 	jsr	ot
