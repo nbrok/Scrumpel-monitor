@@ -62,6 +62,18 @@ resetflag		equ	$06e
 
 stackbase		equ	$bfff
 
+;	org	$3ff0
+;	phase	$fff0
+;reserv	fdb	$0
+;swi3	fdb	$00f8
+;swi2	fdb	$00f6
+;firq	fdb	$00f0
+;irq	fdb	$00f3
+;swi	fdb	$001a
+;nmi	fdb	$c000
+;reset	fdb	$c000
+;	dephase
+
 	org	0
 	phase	$c000
 
@@ -284,7 +296,7 @@ prompt	fcb	cr,lf,"6809> ",0
 tesc	fcb	cr,lf,"Escaped.",0
 alt2	fcb	" : ",0
 
-initr	clr	resetflag		;Clear resetflag form BASIC.
+initr	clr	resetflag		;Clear resetflag from BASIC.
 	clr	more_max		;Clear MORE.
 	clr	more_ctr
 	lda	#%00000011		;Reset ACIA.
